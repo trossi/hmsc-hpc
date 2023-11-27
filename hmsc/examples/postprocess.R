@@ -1,5 +1,3 @@
-# library(devtools)
-# install_github("hmsc-r/HMSC")
 library(Hmsc)
 library(jsonify)
 library(vioplot)
@@ -7,7 +5,7 @@ library(abind)
 RS = 1
 set.seed(RS)
 nParallel = 8
-flagFitR = 1
+flagFitR = 0
 
 path = getwd()
 
@@ -33,7 +31,7 @@ if (length(args) < 1) {
     stop("Missing args")
 }
 print(args)
-selected_experiment = experiments[[args[1]]]
+selected_experiment = experiments[[sprintf("M%s", args[1])]]
 if (is.null(selected_experiment)) {
     stop("Unknown experiment")
 }
@@ -53,54 +51,6 @@ thin = 5
 transient = nSamples*thin
 verbose = thin*1
 
-#### Step 2. Export initial model ####
-
-set.seed(RS+42)
-init_obj = sampleMcmc(m, samples=nSamples, thin=thin,
-                      transient=transient,
-                      nChains=nChains, verbose=verbose, engine="pass")
-
-init_file_name = sprintf("TF-init-obj-%s.rds", selected_experiment$name)
-init_file_path = file.path(path, "examples/data", init_file_name)
-fitR_file_name = sprintf("R-fit-%s_thin%.4d.RData", selected_experiment$name, thin)
-fitR_file_path = file.path(path, "examples/data", fitR_file_name)
-python_file_name = "run_gibbs_sampler.py"
-python_file_path = file.path(path, "examples", python_file_name)
-postList_file_name = sprintf("TF-postList-obj-%s.rds", selected_experiment$name)
-# postList_file_name = sprintf("TF-postList-obj-%s_tf_thin%.4d.rds", selected_experiment$name, thin)
-postList_file_path = file.path(path, "examples/data", postList_file_name)
-
-nr = init_obj[["hM"]][["nr"]]
-rLNames = init_obj[["hM"]][["ranLevelsUsed"]]
-for (r in seq_len(nr)) {
-  rLName = rLNames[[r]]
-  init_obj[["hM"]][["rL"]][[rLName]][["s"]] = NULL
-  init_obj[["hM"]][["ranLevels"]][[rLName]][["s"]] = NULL
-  spatialMethod = init_obj[["hM"]][["rL"]][[r]][["spatialMethod"]]
-  if (!is.null(spatialMethod)) {
-    if (spatialMethod == "NNGP") {
-      gN = length(init_obj[["dataParList"]][["rLPar"]][[r]][["iWg"]])
-  
-      for (i in seq_len(gN)) {
-        iWg = as(init_obj[["dataParList"]][["rLPar"]][[r]][["iWg"]][[i]], "dgTMatrix")
-        RiWg = as(init_obj[["dataParList"]][["rLPar"]][[r]][["RiWg"]][[i]], "dgTMatrix")
-        init_obj[["dataParList"]][["rLPar"]][[r]][["iWgi"]][[i]] = iWg@i
-        init_obj[["dataParList"]][["rLPar"]][[r]][["iWgj"]][[i]] = iWg@j
-        init_obj[["dataParList"]][["rLPar"]][[r]][["iWgx"]][[i]] = iWg@x
-        init_obj[["dataParList"]][["rLPar"]][[r]][["RiWgi"]][[i]] = RiWg@i
-        init_obj[["dataParList"]][["rLPar"]][[r]][["RiWgj"]][[i]] = RiWg@j
-        init_obj[["dataParList"]][["rLPar"]][[r]][["RiWgx"]][[i]] = RiWg@x
-      }
-      init_obj[["dataParList"]][["rLPar"]][[r]][["iWg"]] = NULL
-      init_obj[["dataParList"]][["rLPar"]][[r]][["RiWg"]] = NULL
-    }
-    else if (spatialMethod == "GPP") {
-      init_obj[["dataParList"]][["rLPar"]][[r]][["nK"]] = nrow(init_obj[["dataParList"]][["rLPar"]][[1]][["Fg"]])
-    }
-  }
-}
-
-saveRDS(to_json(init_obj), file = init_file_path, compress=TRUE)
 
 #### Step 3. Run R code ####
 
@@ -122,55 +72,10 @@ if(flagFitR){
   load(file=fitR_file_path)
 }
 
-#### Step 4. Run TF code ####
-
-python_cmd = paste("python", sprintf("'%s'",python_file_path), 
-                   "--samples", nSamples,
-                   "--transient", transient,
-                   "--thin", thin,
-                   "--verbose", verbose,
-                   "--input", init_file_path,
-                   "--output", postList_file_path)
-print(python_cmd)
-#
-# Set RStudio to TF env
-#
-# my_conda_env_name = "tensorflow" # name of my conda TF env
-
-# Start one-time python setup
-# INFO. one-time steps to set python for RStudio/reticulate
-# INFO. requires a session restart for Sys.setenv() to take effect
-
-# library(tidyverse)
-# py_bin <- reticulate::conda_list() %>%
-#   filter(name == my_conda_env_name) %>%
-#   pull(python)
-#
-# Sys.setenv(RETICULATE_PYTHON = py_bin)
-
-# End one-time python setup
-
-# library(reticulate)
-# use_condaenv(my_conda_env_name, required=TRUE) # activate the TF env
-# repl_python()
-
-#
-# Generate sampled posteriors in TF
-#
-system(paste("chmod a+x", sprintf("'%s'",python_file_path))) # set file permissions for shell execution
-system("python --version", wait=TRUE)
-system(python_cmd, wait=TRUE) # run TF gibbs sampler
-
-
-
 
 #### Step 5. Import TF posteriors ####################################################################################
 
 postList.TF <- from_json(readRDS(file = postList_file_path)[[1]])
-
-# postList_file_str <- paste(readLines(postList_file_path), collapse="\n")
-# s = '{"0":{"0":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null},"1":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null}},"1":{"0":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null},"1":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null}},"2":{"0":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null},"1":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null}},"3":{"0":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null},"1":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null}},"4":{"0":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null},"1":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null}},"5":{"0":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null},"1":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null}},"6":{"0":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null},"1":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null}},"7":{"0":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null},"1":{"wRRR":null,"rho":null,"PsiRRR":null,"DeltaRRR":null}}}'
-# from_json(s)
 
 names(postList.TF) = NULL
 for (chain in seq_len(nChains)) {
