@@ -100,8 +100,9 @@ if (selected_experiment$name == experiments$M1$name) {
   #m$XScaled = 0.5*(m$XScaled[[1]] + m$XScaled[[2]])
   #m$XData = 0.5*(m$XData[[1]] + m$XData[[2]])
 } else if (selected_experiment$name == experiments$M7$name) {
-  print("Not Implemented: XScaled not found error for engine=pass")
-  stop("Not covered")
+  nChains = 8
+  nSamples = 250
+  thin = 1000
 } else if (selected_experiment$name == experiments$M8$name) {
   nChains = 8
   nSamples = 250
