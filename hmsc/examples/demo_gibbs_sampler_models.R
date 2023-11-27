@@ -43,9 +43,12 @@ if(!is.na(selected_experiment$id)){
 }
 print(m)
 
+# nChains = 8
+# nSamples = 250
+# thin = 100
 nChains = 8
-nSamples = 250
-thin = 100
+nSamples = 3
+thin = 5
 
 transient = nSamples*thin
 verbose = thin*1
