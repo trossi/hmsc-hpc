@@ -57,7 +57,6 @@ def load_model_from_rds(rds_file_path):
 
 
 def save_chains_postList_to_rds(postList, postList_file_path, nChains, elapsedTime=-1, flag_save_eta=True):
-
     json_data = {chain: {} for chain in range(nChains)}
     json_data["time"] = elapsedTime
 
@@ -66,28 +65,27 @@ def save_chains_postList_to_rds(postList, postList_file_path, nChains, elapsedTi
             sample_data = {}
             params = postList[chain][i]
 
-            sample_data["Beta"] = params["Beta"].numpy().tolist()
-            sample_data["BetaSel"] = [par.numpy().tolist() for par in params["BetaSel"]]
-            sample_data["Gamma"] = params["Gamma"].numpy().tolist()
-            sample_data["iV"] = params["iV"].numpy().tolist()
-            sample_data["rhoInd"] = (params["rhoInd"]+1).numpy().tolist()
-            sample_data["sigma"] = params["sigma"].numpy().tolist()
+            sample_data["Beta"] = params["Beta"].numpy()
+            sample_data["BetaSel"] = [par.numpy() for par in params["BetaSel"]]
+            sample_data["Gamma"] = params["Gamma"].numpy()
+            sample_data["iV"] = params["iV"].numpy()
+            sample_data["rhoInd"] = (params["rhoInd"]+1).numpy()
+            sample_data["sigma"] = params["sigma"].numpy()
             
-            sample_data["Lambda"] = [par.numpy().tolist() for par in params["Lambda"]]
-            sample_data["Psi"] = [par.numpy().tolist() for par in params["Psi"]]
-            sample_data["Delta"] = [par.numpy().tolist() for par in params["Delta"]]
-            sample_data["Eta"] = [par.numpy().tolist() for par in params["Eta"]] if flag_save_eta else None
-            sample_data["Alpha"] = [(par+1).numpy().tolist() for par in params["AlphaInd"]]
+            sample_data["Lambda"] = [par.numpy() for par in params["Lambda"]]
+            sample_data["Psi"] = [par.numpy() for par in params["Psi"]]
+            sample_data["Delta"] = [par.numpy() for par in params["Delta"]]
+            sample_data["Eta"] = [par.numpy() for par in params["Eta"]] if flag_save_eta else None
+            sample_data["Alpha"] = [(par+1).numpy() for par in params["AlphaInd"]]
             
             if params["wRRR"] is not None:
-              sample_data["wRRR"] = params["wRRR"].numpy().tolist()
-              sample_data["PsiRRR"] = params["PsiRRR"].numpy().tolist()
-              sample_data["DeltaRRR"] = params["DeltaRRR"].numpy().tolist()
+              sample_data["wRRR"] = params["wRRR"].numpy()
+              sample_data["PsiRRR"] = params["PsiRRR"].numpy()
+              sample_data["DeltaRRR"] = params["DeltaRRR"].numpy()
             else:
               sample_data["wRRR"] = sample_data["PsiRRR"] = sample_data["DeltaRRR"] = None
 
             json_data[chain][i] = sample_data
 
-    json_str = json.dumps(json_data)
-    
-    pyreadr.write_rds(postList_file_path, pd.DataFrame([[json_str]]), compress="gzip")
+    r_data = rdata.conversion.convert_to_r_data(json_data, encoding='UTF-8')
+    rdata.io.write(postList_file_path, r_data, format='xdr', compression='gzip')

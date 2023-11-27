@@ -75,7 +75,7 @@ if(flagFitR){
 
 #### Step 5. Import TF posteriors ####################################################################################
 
-postList.TF <- from_json(readRDS(file = postList_file_path)[[1]])
+postList.TF <- readRDS(file = postList_file_path)
 
 names(postList.TF) = NULL
 for (chain in seq_len(nChains)) {
