@@ -14,7 +14,6 @@ path = getwd()
 #### Step 1. Load model ####
 
 load(file = file.path(path, "examples/data", "unfitted_models_2.RData"))
-models
 experiments = list(
   M1=list(name="model1",id=1),
   M2=list(name="model2",id=2),
@@ -29,10 +28,20 @@ experiments = list(
   M11=list(name="model11",id=NA)
 )
 
-selected_experiment = experiments$M4
+args = commandArgs(trailingOnly=TRUE)
+if (length(args) < 1) {
+    stop("Missing args")
+}
+print(args)
+selected_experiment = experiments[[args[1]]]
+if (is.null(selected_experiment)) {
+    stop("Unknown experiment")
+}
+
 if(!is.na(selected_experiment$id)){
   m = models[[selected_experiment$id]]
 }
+print(m)
 
 if (selected_experiment$name == experiments$M1$name) {
   nChains = 8
