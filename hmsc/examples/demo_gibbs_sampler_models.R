@@ -77,6 +77,7 @@ if (selected_experiment$name == experiments$M1$name) {
   nc = min(10, m$nc)
   nt = min(1, m$nt)
   nf = 5
+  ns = m$ns
   
   X = m$X[1:ny,1:nc,drop=FALSE]
   Tr = m$Tr[1:ns,1:nt,drop=FALSE]
