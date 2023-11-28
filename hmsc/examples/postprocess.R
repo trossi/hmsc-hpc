@@ -86,6 +86,7 @@ if(flagFitR){
 #### Step 5. Import TF posteriors ####################################################################################
 
 postList.TF <- readRDS(file = postList_file_path)
+postList.TF$time <- NULL
 
 names(postList.TF) = NULL
 for (chain in seq_len(nChains)) {
