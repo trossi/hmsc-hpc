@@ -198,6 +198,7 @@ obj.TF = alignPosterior(obj.TF)
 #
 # obj.TF = obj.R #CHECK THIS
 
+nc = obj.R$nc
 b.R = getPostEstimate(obj.R, "Beta")
 b.TF = getPostEstimate(obj.TF, "Beta")
 par(mfrow=c(ceiling(nc/2),min(2,nc-1)))
