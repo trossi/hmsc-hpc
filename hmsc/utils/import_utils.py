@@ -46,7 +46,7 @@ def load_model_data(hmscModel, importedInitParList, dtype=np.float64):
     modelData["XSel"] = XSel
 
     # ncRRR = int(hmscModel.get("ncRRR")[0])
-    if ("XRRRScaled" in hmscModel) and bool(hmscModel["XRRRScaled"]):
+    if hmscModel.get("XRRRScaled") is not None:
       XRRR = np.asarray(hmscModel["XRRRScaled"]).astype(dtype)
     else:
       XRRR = np.zeros([ny,0], dtype)
