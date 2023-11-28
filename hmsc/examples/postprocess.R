@@ -59,7 +59,6 @@ fitR_file_path = file.path(path, "examples/data", fitR_file_name)
 postList_file_name = sprintf("TF-postList-obj-%s.rds", selected_experiment$name)
 postList_file_path = file.path(path, "examples/data", postList_file_name)
 
-init_obj <- readRDS(file = init_file_path)
 
 
 #### Step 3. Run R code ####
@@ -79,7 +78,122 @@ if(flagFitR){
   print(elapsedTime)
   save(obj.R, elapsedTime, file=fitR_file_path)
 } else{
-  load(file=fitR_file_path)
+  #load(file=fitR_file_path)
+
+postList_old_file_path = file.path("../../hmsc-hpc-json/hmsc", "examples/data", postList_file_name)
+postList.TF <- from_json(readRDS(file = postList_old_file_path)[[1]])
+
+########## !!!!!!!!!!!!!!!!!!!!!! start of copy-paste to process TF output
+########## !!!!!!!!!!!!!!!!!!!!!! start of copy-paste to process TF output
+########## !!!!!!!!!!!!!!!!!!!!!! start of copy-paste to process TF output
+postList.TF$time <- NULL
+
+names(postList.TF) = NULL
+for (chain in seq_len(nChains)) {
+  names(postList.TF[[chain]]) = NULL
+}
+
+init_obj <- readRDS(file = init_file_path)
+obj.TF = init_obj$hM
+obj.TF[["postList"]] = postList.TF
+
+obj.TF$samples = nSamples
+obj.TF$thin = thin
+obj.TF$transient = transient
+
+
+#
+# Rescaling Beta/Gamma; copied from combineParameters.R; need to revisit this section
+#
+nt = obj.TF[["nt"]]
+TrInterceptInd = obj.TF[["TrInterceptInd"]]
+TrScalePar = obj.TF[["TrScalePar"]]
+ncNRRR = obj.TF[["ncNRRR"]]
+ncRRR = obj.TF[["ncRRR"]]
+ncsel = obj.TF[["ncsel"]]
+XScalePar = obj.TF[["XScalePar"]]
+XInterceptInd = obj.TF[["XInterceptInd"]]
+XRRRScalePar = obj.TF[["XRRRScalePar"]]
+
+for (chain in seq_len(nChains)) {
+  for (sample in seq_len(nSamples)) {
+    Beta = obj.TF[["postList"]][[chain]][[sample]][["Beta"]]
+    BetaSel = obj.TF[["postList"]][[chain]][[sample]][["BetaSel"]]
+    if(is.matrix(BetaSel)){
+      BetaSel = split(BetaSel, rep(1:nrow(BetaSel), ncol(BetaSel)))
+    }
+    Gamma = obj.TF[["postList"]][[chain]][[sample]][["Gamma"]]
+    iV = obj.TF[["postList"]][[chain]][[sample]][["iV"]]
+    rho = obj.TF$rhopw[obj.TF[["postList"]][[chain]][[sample]][["rhoInd"]], 1]
+    sigma = obj.TF[["postList"]][[chain]][[sample]][["sigma"]]
+
+    for(p in 1:nt){
+      me = TrScalePar[1,p]
+      sc = TrScalePar[2,p]
+      if(me!=0 || sc!=1){
+        Gamma[,p] = Gamma[,p]/sc
+        if(!is.null(TrInterceptInd)){
+          Gamma[,TrInterceptInd] = Gamma[,TrInterceptInd] - me*Gamma[,p]
+        }
+      }
+    }
+
+    for(k in 1:ncNRRR){
+      me = XScalePar[1,k]
+      sc = XScalePar[2,k]
+      if(me!=0 || sc!=1){
+        Beta[k,] = Beta[k,]/sc
+        Gamma[k,] = Gamma[k,]/sc
+        if(!is.null(XInterceptInd)){
+          Beta[XInterceptInd,] = Beta[XInterceptInd,] - me*Beta[k,]
+          Gamma[XInterceptInd,] = Gamma[XInterceptInd,] - me*Gamma[k,]
+        }
+        iV[k,] = iV[k,]*sc
+        iV[,k] = iV[,k]*sc
+      }
+    }
+
+    for(k in seq_len(ncRRR)){
+      me = XRRRScalePar[1,k]
+      sc = XRRRScalePar[2,k]
+      if(me!=0 || sc!=1){
+        Beta[ncNRRR+k,] = Beta[ncNRRR+k,]/sc
+        Gamma[ncNRRR+k,] = Gamma[ncNRRR+k,]/sc
+        if(!is.null(XInterceptInd)){
+          Beta[XInterceptInd,] = Beta[XInterceptInd,] - me*Beta[ncNRRR+k,]
+          Gamma[XInterceptInd,] = Gamma[XInterceptInd,] - me*Gamma[ncNRRR+k,]
+        }
+        iV[ncNRRR+k,] = iV[ncNRRR+k,]*sc
+        iV[,ncNRRR+k] = iV[,ncNRRR+k]*sc
+      }
+    }
+
+    for (i in seq_len(ncsel)){
+      XSel = obj.TF$XSelect[[i]]
+      for (spg in 1:length(XSel$q)){
+        if(!BetaSel[[i]][spg]){
+          fsp = which(XSel$spGroup==spg)
+          Beta[XSel$covGroup,fsp]=0
+        }
+      }
+    }
+
+    obj.TF[["postList"]][[chain]][[sample]][["Beta"]] = Beta
+    obj.TF[["postList"]][[chain]][[sample]][["Gamma"]] = Gamma
+    obj.TF[["postList"]][[chain]][[sample]][["V"]] = chol2inv(chol(iV))
+    obj.TF[["postList"]][[chain]][[sample]][["iV"]] = NULL
+    obj.TF[["postList"]][[chain]][[sample]][["rho"]] = rho
+    obj.TF[["postList"]][[chain]][[sample]][["sigma"]] = sigma^2
+  }
+}
+obj.TF = alignPosterior(obj.TF)
+
+########## !!!!!!!!!!!!!!!!!!!!!! end of copy-paste
+########## !!!!!!!!!!!!!!!!!!!!!! end of copy-paste
+########## !!!!!!!!!!!!!!!!!!!!!! end of copy-paste
+
+obj.R = obj.TF
+
 }
 
 
@@ -93,13 +207,9 @@ for (chain in seq_len(nChains)) {
   names(postList.TF[[chain]]) = NULL
 }
 
+init_obj <- readRDS(file = init_file_path)
 obj.TF = init_obj$hM
 obj.TF[["postList"]] = postList.TF
-
-# tmp = obj.R$postList[[1]]
-# obj.R$postList[[1]] = obj.R$postList[[2]]
-# tmp = obj.TF$postList[[1]]
-# obj.TF$postList[[1]] = obj.TF$postList[[2]]
 
 obj.TF$samples = nSamples
 obj.TF$thin = thin
