@@ -52,6 +52,16 @@ transient = nSamples*thin
 verbose = thin*1
 
 
+init_file_name = sprintf("TF-init-obj-%s.rds", selected_experiment$name)
+init_file_path = file.path(path, "examples/data", init_file_name)
+fitR_file_name = sprintf("R-fit-%s_thin%.4d.RData", selected_experiment$name, thin)
+fitR_file_path = file.path(path, "examples/data", fitR_file_name)
+postList_file_name = sprintf("TF-postList-obj-%s.rds", selected_experiment$name)
+postList_file_path = file.path(path, "examples/data", postList_file_name)
+
+init_obj <- readRDS(file = init_file_path)
+
+
 #### Step 3. Run R code ####
 
 #
