@@ -307,6 +307,7 @@ obj.TF = alignPosterior(obj.TF)
 # Plot sampled posteriors summaries from R only and TF
 #
 # obj.TF = obj.R #CHECK THIS
+pdf(file=sprintf("RPlots-%s.pdf", selected_experiment$name))
 
 nc = obj.R$nc
 b.R = getPostEstimate(obj.R, "Beta")
