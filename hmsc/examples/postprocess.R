@@ -315,32 +315,3 @@ plot(mpost_R)
 mpost_TF = convertToCodaObject(obj.TF, Lambda=FALSE, Omega=FALSE, Psi=FALSE, Delta=FALSE, Eta=FALSE)$V
 plot(mpost_TF)
 par(mfrow=c(1,1))
-
-# psrf_R = gelman.diag(mpost_R, multivariate=FALSE)$psrf
-# psrf_TF = gelman.diag(mpost_TF, multivariate=FALSE)$psrf
-# plot(psrf_R[,1], psrf_TF[,1], type="n")
-# text(psrf_R[,1], psrf_TF[,1], 1:nrow(psrf_R))
-
-
-
-# library(truncnorm)
-# for(cInd in 1:chain){
-#   # ind = order(rowMeans(abs(obj.R$postList[[cInd]][[nSamples]]$Lambda[[1]])^2), decreasing=TRUE)[1:nc]
-#   cInd2 = 1
-#   ind = which(rowSums(obj.R$postList[[cInd2]][[nSamples]]$Psi[[1]]) > 0)
-#   init_obj$initParList[[cInd]]$Eta[[1]] = obj.R$postList[[cInd2]][[nSamples]]$Eta[[1]][,ind,drop=FALSE]
-#   init_obj$initParList[[cInd]]$Lambda[[1]] = obj.R$postList[[cInd2]][[nSamples]]$Lambda[[1]][ind,,drop=FALSE]
-#   init_obj$initParList[[cInd]]$Delta[[1]] = 1+0*obj.R$postList[[cInd2]][[nSamples]]$Delta[[1]][ind,,drop=FALSE]
-#   init_obj$initParList[[cInd]]$Psi[[1]] = 1+0*obj.R$postList[[cInd2]][[nSamples]]$Psi[[1]][ind,,drop=FALSE]
-#   init_obj$initParList[[cInd]]$Alpha[[1]] = obj.R$postList[[cInd2]][[nSamples]]$Alpha[[1]][ind,drop=FALSE]
-#   L = init_obj$initParList[[cInd]]$Eta[[1]] %*% init_obj$initParList[[cInd]]$Lambda[[1]]
-#   lB = rep(-Inf, length(Y))
-#   uB = rep(Inf, length(Y))
-#   lB[Y] = 0
-#   uB[!Y] = 0
-#   z = rtruncnorm(length(Y), a=lB, b=uB, mean=L, sd=1)
-#   init_obj$initParList[[cInd]]$Z = matrix(z, nrow(L), ncol(L))
-# }
-# write(to_json(init_obj), file = init_file_path)
-
-
