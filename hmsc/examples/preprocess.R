@@ -107,26 +107,13 @@ for (r in seq_len(nr)) {
   }
 }
 
-# Replace the Hmsc object with a similar list containing the relevant data only
-hM <- init_obj$hM
-hM_list <- list()
-for (key in names(hM)) {
-    value <- hM[[key]]
-    if (is.numeric(value)
-        || is.matrix(value)
-        || is.data.frame(value)
-        || is.list(value)
-        ) {
-        hM_list[[key]] <- value
-    }
-}
-init_obj$hM <- hM_list
+# Remove objects unreadable on python side (not needed as input either)
+init_obj$hM$call <- NULL
+init_obj$hM$XFormula <- NULL
+init_obj$hM$XRRRFormula <- NULL
+init_obj$hM$TrFormula <- NULL
 
 saveRDS(init_obj, file = init_file_path, compress=TRUE)
-
-# Restore Hmsc object
-init_obj$hM <- hM
-
 
 #### Step 4. Run TF code ####
 
