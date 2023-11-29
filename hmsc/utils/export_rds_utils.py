@@ -46,7 +46,8 @@ def read_r(fpath):
         {
             **rdata.conversion.DEFAULT_CLASS_MAP,
             "package_version": version_constructor,
-        }
+        },
+        enable_xarray=False,
     )
     return data_dict
 

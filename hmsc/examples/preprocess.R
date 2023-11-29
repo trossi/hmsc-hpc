@@ -72,18 +72,6 @@ for (r in seq_len(nr)) {
   init_obj[["hM"]][["rL"]][[rLName]][["s"]] = NULL
   init_obj[["hM"]][["ranLevels"]][[rLName]][["s"]] = NULL
   spatialMethod = init_obj[["hM"]][["rL"]][[r]][["spatialMethod"]]
-
-  # Remove row and column names
-  for (key in names(init_obj[["dataParList"]][["rLPar"]][[r]])) {
-    value = init_obj[["dataParList"]][["rLPar"]][[r]][[key]]
-    value_dim = dim(value)
-    value = as.vector(value)
-    if (! is.null(value_dim)) {
-        value = array(value, dim=value_dim)
-    }
-    init_obj[["dataParList"]][["rLPar"]][[r]][[key]] <- value
-  }
-
   if (!is.null(spatialMethod)) {
     if (spatialMethod == "NNGP") {
       gN = length(init_obj[["dataParList"]][["rLPar"]][[r]][["iWg"]])
