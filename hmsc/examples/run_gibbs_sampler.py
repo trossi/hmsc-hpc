@@ -68,7 +68,7 @@ def run_gibbs_sampler(
         print("Adjusted chainIndList", chainIndListNew)
         chainIndList = chainIndListNew
 
-    print("Initializing TF graph")
+    print("Initializing TF graph", flush=True)
     startTime = time.time()
     parSamples = gibbs.sampling_routine(
         initParList[0],
@@ -80,15 +80,15 @@ def run_gibbs_sampler(
         flag_save_eta=flag_save_eta,
     )
     elapsedTime = time.time() - startTime
-    print("TF graph initialized in %.1f sec" % elapsedTime)
+    print("TF graph initialized in %.1f sec" % elapsedTime, flush=True)
      
-    print("Running TF Gibbs sampler for %d chains with indices" % len(chainIndList), chainIndList)
+    print("Running TF Gibbs sampler for %d chains with indices" % len(chainIndList), chainIndList, flush=True)
     with tf.profiler.experimental.Profile('logdir') if flag_profile else nullcontext():
         startTime = time.time()
         postList = [None] * len(chainIndList)
         
         for chainInd, chain in enumerate(chainIndList):
-            print("\n", "Computing chain %d" % chain)
+            print("\n", "Computing chain %d" % chain, flush=True)
     
             parSamples = gibbs.sampling_routine(
                 initParList[chain],
@@ -120,10 +120,10 @@ def run_gibbs_sampler(
                 postList[chainInd][n] = parSnapshot
             
             elapsedTime = time.time() - startTime
-            print("\n", "%d chains completed in %.1f sec" % (chainInd+1, elapsedTime))
+            print("\n", "%d chains completed in %.1f sec" % (chainInd+1, elapsedTime), flush=True)
     
         elapsedTime = time.time() - startTime
-        print("\n", "Whole Gibbs sampler elapsed %.1f" % elapsedTime)
+        print("\n", "Whole Gibbs sampler elapsed %.1f" % elapsedTime, flush=True)
     
     if flag_save_postList_to_rds:
         save_chains_postList_to_rds(postList, postList_file_path, len(chainIndList), elapsedTime, flag_save_eta)
@@ -203,7 +203,7 @@ if __name__ == "__main__":
     )
     args = argParser.parse_args()
     print("args=%s" % args)
-    print("working directory", os.getcwd())
+    print("working directory", os.getcwd(), flush=True)
     init_obj_file_path = args.input
     postList_file_path = args.output
 

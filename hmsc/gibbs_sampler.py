@@ -101,7 +101,7 @@ class GibbsSampler(tf.Module):
         print_debug_flag= False,
     ):
         if print_retrace_flag:
-            print("retracing")
+            print("retracing", flush=True)
 
         ns = self.modelDims["ns"]
         nr = self.modelDims["nr"]
