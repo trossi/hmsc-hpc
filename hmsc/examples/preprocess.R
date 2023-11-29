@@ -27,7 +27,7 @@ experiments = list(
 )
 
 args = commandArgs(trailingOnly=TRUE)
-if (length(args) < 1) {
+if (length(args) < 6) {
     stop("Missing args")
 }
 print(args)
@@ -41,15 +41,11 @@ if(!is.na(selected_experiment$id)){
 }
 print(m)
 
-nChains = 8
-nSamples = 250
-thin = 100
-# nChains = 8
-# nSamples = 3
-# thin = 5
-
-transient = nSamples*thin
-verbose = thin*1
+nChains = strtoi(args[2])
+nSamples = strtoi(args[3])
+thin = strtoi(args[4])
+transient = strtoi(args[5])
+verbose = strtoi(args[6])
 
 #### Step 2. Export initial model ####
 
@@ -107,8 +103,8 @@ saveRDS(init_obj, file = init_file_path, compress=TRUE)
 
 python_cmd = paste("python", sprintf("'%s'",python_file_path),
                    "--samples", nSamples,
-                   "--transient", transient,
                    "--thin", thin,
+                   "--transient", transient,
                    "--verbose", verbose,
                    "--input", init_file_path,
                    "--output", postList_file_path)
