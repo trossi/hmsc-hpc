@@ -1,5 +1,0 @@
-pyreadr
-tensorflow-probability==0.20.0
-numpy
-pandas
-ujson
