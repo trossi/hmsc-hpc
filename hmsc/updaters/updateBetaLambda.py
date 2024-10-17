@@ -4,6 +4,9 @@ from hmsc.utils.tf_named_func import tf_named_func
 from hmsc.magma_cholesky.magmafunc import M_cholesky
 import os
 tfm, tfla, tfr, tfs = tf.math, tf.linalg, tf.random, tf.sparse
+
+M_cholesky = tfla.cholesky  # XXX: custom operator not working well here
+
 @tf_named_func("betaLambda")
 def updateBetaLambda(params, data, priorHyperparams, dtype=np.float64):
     """Update conditional updater(s):
